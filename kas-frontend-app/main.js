@@ -29,8 +29,7 @@ function createWindow() {
   if (isDev) {
     // 开发环境加载本地服务器
     mainWindow.loadURL('http://localhost:5173')
-    // 可选：打开开发者工具
-    mainWindow.webContents.openDevTools()
+    // 开发环境下打开开发者工具
   } else {
     // 生产环境加载打包后的文件
     mainWindow.loadFile(path.join(__dirname, 'dist/index.html'))
