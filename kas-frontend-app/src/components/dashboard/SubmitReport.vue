@@ -31,21 +31,17 @@
           <!-- 通报类型 -->
           <div class="form-group">
             <label for="reportType">通报类型</label>
-            <select 
+            <input 
               id="reportType" 
               v-model="formData.reportType" 
+              type="text"
+              placeholder="请输入通报类型，如：违纪扣分、表现加分等"
               required
               :disabled="submitting"
-            >
-              <option value="">请选择通报类型</option>
-              <option 
-                v-for="type in reportTypes" 
-                :key="type.value" 
-                :value="type.value"
-              >
-                {{ type.label }}
-              </option>
-            </select>
+            />
+            <small class="field-hint">
+              请简要描述通报类型
+            </small>
           </div>
         </div>
 
@@ -67,18 +63,6 @@
             <small class="field-hint">
               负数表示扣分，正数表示加分
             </small>
-          </div>
-
-          <!-- 时间 -->
-          <div class="form-group">
-            <label for="reportTime">时间</label>
-            <input 
-              id="reportTime" 
-              v-model="formData.reportTime" 
-              type="datetime-local" 
-              required
-              :disabled="submitting"
-            />
           </div>
         </div>
 
@@ -106,7 +90,7 @@
               <strong>班级：</strong>{{ getClassDisplay() }}
             </div>
             <div class="preview-item">
-              <strong>通报类型：</strong>{{ getReportTypeDisplay() }}
+              <strong>通报类型：</strong>{{ formData.reportType }}
             </div>
             <div class="preview-item" :class="{ 
               'score-positive': formData.scoreChange > 0,
@@ -114,9 +98,6 @@
             }">
               <strong>分数变动：</strong>
               {{ formData.scoreChange > 0 ? '+' : '' }}{{ formData.scoreChange }}
-            </div>
-            <div class="preview-item">
-              <strong>时间：</strong>{{ formatDateTime(formData.reportTime) }}
             </div>
             <div class="preview-item">
               <strong>备注：</strong>{{ formData.remark }}
@@ -161,8 +142,7 @@ const formData = ref({
   class: '',
   reportType: '',
   scoreChange: 0,
-  remark: '',
-  reportTime: ''
+  remark: ''
 })
 
 // 状态管理
@@ -193,54 +173,24 @@ const classList = ref([
   { class: 24, headteacher: "王思程" }
 ])
 
-// 通报类型列表
-const reportTypes = ref([
-  { value: 'discipline_violation', label: '违纪扣分' },
-  { value: 'hygiene_deduction', label: '卫生扣分' },
-  { value: 'late_absence', label: '迟到旷课' },
-  { value: 'homework_issue', label: '作业问题' },
-  { value: 'good_behavior', label: '表现加分' },
-  { value: 'activity_participation', label: '活动加分' },
-  { value: 'academic_excellence', label: '学习优秀' },
-  { value: 'helping_others', label: '助人为乐' }
-])
-
 // 表单验证
 const isFormValid = computed(() => {
   return formData.value.class !== '' &&
-         formData.value.reportType !== '' &&
+         formData.value.reportType.trim() !== '' &&
          formData.value.scoreChange !== 0 &&
          formData.value.remark.trim().length > 0 &&
-         formData.value.reportTime !== '' &&
          formData.value.remark.length <= 500
 })
 
 // 初始化
 onMounted(() => {
-  // 设置默认时间为当前时间
-  const now = new Date()
-  const timezone = now.getTimezoneOffset() * 60000
-  const localTime = new Date(now.getTime() - timezone)
-  formData.value.reportTime = localTime.toISOString().slice(0, 16)
+  // 移除时间相关的初始化代码
 })
 
 // 获取班级显示名称
 const getClassDisplay = () => {
   const classItem = classList.value.find(c => c.class === Number(formData.value.class))
   return classItem ? `${classItem.class}班 - ${classItem.headteacher}` : ''
-}
-
-// 获取通报类型显示名称
-const getReportTypeDisplay = () => {
-  const type = reportTypes.value.find(t => t.value === formData.value.reportType)
-  return type ? type.label : ''
-}
-
-// 格式化日期时间
-const formatDateTime = (datetime: string) => {
-  if (!datetime) return ''
-  const date = new Date(datetime)
-  return date.toLocaleString('zh-CN')
 }
 
 // 切换预览
@@ -256,33 +206,43 @@ const handleSubmit = async () => {
   message.value = ''
 
   try {
-    // 模拟API调用
-    console.log('提交通报数据:', formData.value)
+    // 构建符合后端要求的数据格式
+    const submitData = {
+      class: parseInt(formData.value.class),
+      isadd: formData.value.scoreChange > 0,
+      changescore: Math.abs(formData.value.scoreChange),
+      note: `${formData.value.reportType} - ${formData.value.remark}`, // 将类型和备注合并
+      submitter: "王树琦" // 这里应该从登录状态获取
+    }
     
-    // 这里将来会调用实际的API
-    // const response = await fetch('http://localhost:8080/api/inputdata', {
-    //   method: 'POST',
-    //   headers: {
-    //     'Content-Type': 'application/json',
-    //   },
-    //   body: JSON.stringify(formData.value),
-    // })
-
-    // 模拟网络延迟
-    await new Promise(resolve => setTimeout(resolve, 1500))
-
-    // 模拟成功响应
-    message.value = '通报提交成功！'
-    messageType.value = 'success'
+    console.log('提交通报数据:', submitData)
     
-    // 重置表单
-    setTimeout(() => {
-      resetForm()
-    }, 2000)
+    const response = await fetch('http://localhost:8080/api/inputdata', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(submitData),
+    })
+
+    const result = await response.json()
+
+    if (response.ok && result.success) {
+      message.value = '通报提交成功！'
+      messageType.value = 'success'
+      
+      // 重置表单
+      setTimeout(() => {
+        resetForm()
+      }, 2000)
+    } else {
+      message.value = result.message || '提交失败，请稍后重试'
+      messageType.value = 'error'
+    }
 
   } catch (error) {
     console.error('提交失败:', error)
-    message.value = '提交失败，请稍后重试'
+    message.value = '网络错误，请检查连接后重试'
     messageType.value = 'error'
   } finally {
     submitting.value = false
@@ -295,17 +255,10 @@ const resetForm = () => {
     class: '',
     reportType: '',
     scoreChange: 0,
-    remark: '',
-    reportTime: ''
+    remark: ''
   }
   showPreview.value = false
   message.value = ''
-  
-  // 重新设置默认时间
-  const now = new Date()
-  const timezone = now.getTimezoneOffset() * 60000
-  const localTime = new Date(now.getTime() - timezone)
-  formData.value.reportTime = localTime.toISOString().slice(0, 16)
 }
 </script>
 

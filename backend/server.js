@@ -7,8 +7,10 @@ const PORT = process.env.PORT || 8080
 
 // 中间件
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
-  credentials: true
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -19,9 +21,11 @@ app.use(router)
 
 // 导入路由
 const authRouter = require('./API/auth')
+const inputdataRouter = require('./API/inputdata')
 
 // 使用路由
 app.use('/api', authRouter)
+app.use('/api', inputdataRouter)
 
 // 调试：打印所有注册的路由
 if (app._router) {
@@ -38,7 +42,8 @@ app.get('/', (req, res) => {
     message: 'KAS Backend Server Running',
     version: '1.0.0',
     endpoints: [
-      'POST /api/login - TOTP登录验证'
+      'POST /api/login - TOTP登录验证',
+      'POST /api/inputdata - 提交通报数据'
     ]
   })
 })
@@ -63,5 +68,5 @@ app.use((req, res) => {
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`KAS Backend Server 运行在端口 ${PORT}`)
-  console.log(`API端点: http://localhost:${PORT}/api/login`)
+  console.log(`API端点: http://localhost:${PORT}/api/inputdata`)
 })
