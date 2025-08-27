@@ -16,7 +16,7 @@
     "lint": "eslint . --fix",
     "format": "prettier --write src/",
     "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:5173 && electron .\"",
-    "electron:build": "npm run build && electron-builder",
+    "electron:build": "vite build && electron-builder",
     "electron:serve": "electron .",
     "start": "npm run electron:dev"
   },
@@ -33,7 +33,7 @@
     "@vue/eslint-config-typescript": "^14.6.0",
     "@vue/tsconfig": "^0.7.0",
     "concurrently": "^9.2.1",
-    "electron": "^37.3.1",
+    "electron": "37.3.1",
     "electron-builder": "^25.1.8",
     "eslint": "^9.31.0",
     "eslint-plugin-vue": "~10.3.0",
