@@ -81,8 +81,8 @@ const handleLogin = async () => {
     if (response.status === 200) {
       // 登录成功，跳转到仪表板
       router.push('/dashboard')
-    } else if (response.status === 403) {
-      errorMessage.value = '验证不通过，请重试'
+    } else if (response.status === 401) {
+      errorMessage.value = '鉴权失败，请重试'
     } else {
       errorMessage.value = '登录失败，请稍后重试'
     }

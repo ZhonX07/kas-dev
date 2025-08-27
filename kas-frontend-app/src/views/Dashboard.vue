@@ -8,65 +8,61 @@
       </div>
     </header>
     
+    <nav class="dashboard-nav">
+      <div class="nav-tabs">
+        <button 
+          v-for="tab in tabs" 
+          :key="tab.id"
+          @click="activeTab = tab.id"
+          :class="['nav-tab', { active: activeTab === tab.id }]"
+        >
+          {{ tab.name }}
+        </button>
+      </div>
+    </nav>
+    
     <main class="dashboard-main">
       <div class="dashboard-content">
-        <div class="welcome-card">
-          <h2>欢迎来到仪表板</h2>
-          <p>您已成功通过TOTP验证登录系统。</p>
-        </div>
-        
-        <div class="stats-grid">
-          <div class="stat-card">
-            <h3>系统状态</h3>
-            <p class="stat-value">正常运行</p>
-          </div>
-          
-          <div class="stat-card">
-            <h3>在线用户</h3>
-            <p class="stat-value">1</p>
-          </div>
-          
-          <div class="stat-card">
-            <h3>最后登录</h3>
-            <p class="stat-value">{{ currentTime }}</p>
-          </div>
-        </div>
-        
-        <div class="actions-section">
-          <h3>快速操作</h3>
-          <div class="action-buttons">
-            <button class="action-btn primary">开始评估</button>
-            <button class="action-btn secondary">查看历史</button>
-            <button class="action-btn secondary">系统设置</button>
-          </div>
-        </div>
+        <component :is="activeComponent" />
       </div>
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 
-const router = useRouter()
-const currentTime = ref('')
+// 动态导入组件
+const Overview = defineAsyncComponent(() => import('@/components/dashboard/Overview.vue'))
+const SubmitReport = defineAsyncComponent(() => import('@/components/dashboard/SubmitReport.vue'))
+const ReviewArchive = defineAsyncComponent(() => import('@/components/dashboard/ReviewArchive.vue'))
 
-const updateTime = () => {
-  const now = new Date()
-  currentTime.value = now.toLocaleString('zh-CN')
-}
+const router = useRouter()
+const activeTab = ref('overview')
+
+const tabs = [
+  { id: 'overview', name: '总览' },
+  { id: 'submit', name: '提交通报' },
+  { id: 'archive', name: '审阅过往档案' }
+]
+
+const activeComponent = computed(() => {
+  switch (activeTab.value) {
+    case 'overview':
+      return Overview
+    case 'submit':
+      return SubmitReport
+    case 'archive':
+      return ReviewArchive
+    default:
+      return Overview
+  }
+})
 
 const logout = () => {
-  // 清除可能的登录状态
   router.push('/login')
 }
-
-onMounted(() => {
-  updateTime()
-  // 每分钟更新一次时间
-  setInterval(updateTime, 60000)
-})
 </script>
 
 <style scoped>
@@ -118,6 +114,40 @@ onMounted(() => {
   background: #c0392b;
 }
 
+.dashboard-nav {
+  background: white;
+  border-bottom: 1px solid #e1e5e9;
+  padding: 0 2rem;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 0;
+}
+
+.nav-tab {
+  background: none;
+  border: none;
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  color: #666;
+  cursor: pointer;
+  border-bottom: 3px solid transparent;
+  transition: all 0.3s ease;
+  font-family: inherit;
+}
+
+.nav-tab:hover {
+  color: #333;
+  background-color: #f8f9fa;
+}
+
+.nav-tab.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background-color: #f8fafe;
+}
+
 .dashboard-main {
   padding: 2rem;
 }
@@ -125,106 +155,6 @@ onMounted(() => {
 .dashboard-content {
   max-width: 1200px;
   margin: 0 auto;
-}
-
-.welcome-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-}
-
-.welcome-card h2 {
-  color: #333;
-  margin: 0 0 1rem 0;
-  font-size: 1.8rem;
-}
-
-.welcome-card p {
-  color: #666;
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.stat-card {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  text-align: center;
-}
-
-.stat-card h3 {
-  color: #666;
-  font-size: 0.9rem;
-  margin: 0 0 1rem 0;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.stat-value {
-  color: #333;
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin: 0;
-  font-family: 'Jetbrains Mono', monospace;
-}
-
-.actions-section {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.actions-section h3 {
-  color: #333;
-  margin: 0 0 1.5rem 0;
-  font-size: 1.3rem;
-}
-
-.action-buttons {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.action-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.action-btn.primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-}
-
-.action-btn.primary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
-.action-btn.secondary {
-  background: #f8f9fa;
-  color: #333;
-  border: 2px solid #e9ecef;
-}
-
-.action-btn.secondary:hover {
-  background: #e9ecef;
-  border-color: #dee2e6;
 }
 
 @media (max-width: 768px) {
@@ -235,16 +165,21 @@ onMounted(() => {
     text-align: center;
   }
 
-  .dashboard-main {
-    padding: 1rem;
+  .dashboard-nav {
+    padding: 0 1rem;
   }
 
-  .action-buttons {
+  .nav-tabs {
     flex-direction: column;
   }
 
-  .action-btn {
-    width: 100%;
+  .nav-tab {
+    padding: 0.75rem;
+    text-align: left;
+  }
+
+  .dashboard-main {
+    padding: 1rem;
   }
 }
 </style>
