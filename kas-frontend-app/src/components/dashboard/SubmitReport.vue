@@ -136,6 +136,10 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { getUserInfo } from '@/utils/auth' // 假设有这个函数来获取用户信息
+
+// API 基础 URL
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
 
 // 表单数据
 const formData = ref({
@@ -206,28 +210,46 @@ const handleSubmit = async () => {
   message.value = ''
 
   try {
+    // 获取当前登录用户信息
+    const userInfo = getUserInfo() || { name: '系统用户' }
+    
     // 构建符合后端要求的数据格式
     const submitData = {
       class: parseInt(formData.value.class),
       isadd: formData.value.scoreChange > 0,
       changescore: Math.abs(formData.value.scoreChange),
       note: `${formData.value.reportType} - ${formData.value.remark}`, // 将类型和备注合并
-      submitter: "王树琦" // 这里应该从登录状态获取
+      submitter: userInfo.name // 从用户信息中获取
     }
     
     console.log('提交通报数据:', submitData)
     
-    const response = await fetch('http://localhost:8080/api/inputdata', {
+    // 使用配置的 API URL
+    const response = await fetch(`${API_BASE_URL}/inputdata`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${localStorage.getItem('token')}` // 添加认证 token
       },
       body: JSON.stringify(submitData),
     })
 
+    // 检查 HTTP 状态码
+    if (!response.ok) {
+      // 尝试获取错误信息
+      let errorMessage = '服务器错误，请稍后重试'
+      try {
+        const errorData = await response.json()
+        errorMessage = errorData.message || errorMessage
+      } catch (e) {
+        // 如果无法解析 JSON，使用默认错误消息
+      }
+      throw new Error(errorMessage)
+    }
+
     const result = await response.json()
 
-    if (response.ok && result.success) {
+    if (result.success) {
       message.value = '通报提交成功！'
       messageType.value = 'success'
       
@@ -236,13 +258,12 @@ const handleSubmit = async () => {
         resetForm()
       }, 2000)
     } else {
-      message.value = result.message || '提交失败，请稍后重试'
-      messageType.value = 'error'
+      throw new Error(result.message || '提交失败，请稍后重试')
     }
 
   } catch (error) {
     console.error('提交失败:', error)
-    message.value = '网络错误，请检查连接后重试'
+    message.value = error instanceof Error ? error.message : '网络错误，请检查连接后重试'
     messageType.value = 'error'
   } finally {
     submitting.value = false

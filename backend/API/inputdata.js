@@ -67,7 +67,6 @@ function createTable(db) {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `
-  
   db.exec(createTableSQL)
 }
 
@@ -122,31 +121,6 @@ router.post('/inputdata', (req, res) => {
         id: result.lastInsertRowid,
         database: path.basename(dbInfo.path),
         submittime: submittime
-      })
-      
-    } catch (error) {
-      db.close()
-      throw error
-    }
-    
-  } catch (error) {
-    console.error('数据提交错误:', error)
-    res.status(500).json({
-      success: false,
-      message: '服务器内部错误'
-    })
-  }
-})
-
-module.exports = router
-      
-      console.log(`数据已插入到 ${dbInfo.path}，记录ID: ${insertId}`)
-      
-      res.json({
-        success: true,
-        message: '数据提交成功',
-        id: insertId,
-        database: path.basename(dbInfo.path)
       })
       
     } catch (error) {

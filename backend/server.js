@@ -7,10 +7,8 @@ const PORT = process.env.PORT || 8080
 
 // 中间件
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://127.0.0.1:5173', 'http://localhost:3000'],
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
 }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
@@ -68,5 +66,5 @@ app.use((req, res) => {
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`KAS Backend Server 运行在端口 ${PORT}`)
-  console.log(`API端点: http://localhost:${PORT}/api/inputdata`)
+  console.log(`API端点: http://localhost:${PORT}/api/login`)
 })
