@@ -46,6 +46,24 @@
         </div>
 
         <div class="form-row">
+          <!-- 通报性质 -->
+          <div class="form-group">
+            <label for="reportNature">通报性质</label>
+            <select
+              id="reportNature"
+              v-model="formData.reportNature"
+              required
+              :disabled="submitting"
+            >
+              <option value="">请选择通报性质</option>
+              <option value="praise">表彰</option>
+              <option value="criticism">批评</option>
+            </select>
+            <small class="field-hint">
+              表彰一般用于加分，批评一般用于扣分
+            </small>
+          </div>
+          
           <!-- 分数变动 -->
           <div class="form-group">
             <label for="scoreChange">分数变动</label>
@@ -53,15 +71,15 @@
               id="scoreChange" 
               v-model.number="formData.scoreChange" 
               type="number" 
-              min="-20" 
-              max="20" 
+              :min="formData.reportNature === 'praise' ? '0' : '-20'"
+              :max="formData.reportNature === 'praise' ? '20' : '0'"
               step="1"
-              placeholder="输入分数变动（-20到+20）"
+              :placeholder="formData.reportNature === 'praise' ? '输入加分分数(0-20)' : '输入扣分分数(-20-0)'"
               required
               :disabled="submitting"
             />
             <small class="field-hint">
-              负数表示扣分，正数表示加分
+              {{ formData.reportNature === 'praise' ? '正数表示加分' : '负数表示扣分' }}
             </small>
           </div>
         </div>
@@ -91,6 +109,9 @@
             </div>
             <div class="preview-item">
               <strong>通报类型：</strong>{{ formData.reportType }}
+            </div>
+            <div class="preview-item">
+              <strong>通报性质：</strong>{{ formData.reportNature === 'praise' ? '表彰' : '批评' }}
             </div>
             <div class="preview-item" :class="{ 
               'score-positive': formData.scoreChange > 0,
@@ -135,7 +156,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { getUserInfo } from '@/utils/auth' // 假设有这个函数来获取用户信息
 
 // API 基础 URL
@@ -145,6 +166,7 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080
 const formData = ref({
   class: '',
   reportType: '',
+  reportNature: '', // 新增通报性质字段
   scoreChange: 0,
   remark: ''
 })
@@ -152,7 +174,7 @@ const formData = ref({
 // 状态管理
 const submitting = ref(false)
 const showPreview = ref(false)
-const message = ref('')
+const message = ref('')   
 const messageType = ref<'success' | 'error'>('success')
 
 // 班级列表（基于class.json）
@@ -181,7 +203,11 @@ const classList = ref([
 const isFormValid = computed(() => {
   return formData.value.class !== '' &&
          formData.value.reportType.trim() !== '' &&
-         formData.value.scoreChange !== 0 &&
+         formData.value.reportNature !== '' && // 检查通报性质是否已选择
+         (
+           (formData.value.reportNature === 'praise' && formData.value.scoreChange > 0) || 
+           (formData.value.reportNature === 'criticism' && formData.value.scoreChange < 0)
+         ) &&
          formData.value.remark.trim().length > 0 &&
          formData.value.remark.length <= 500
 })
@@ -202,6 +228,15 @@ const togglePreview = () => {
   showPreview.value = !showPreview.value
 }
 
+// 监听通报性质变化，自动调整分数
+watch(() => formData.value.reportNature, (newValue) => {
+  if (newValue === 'praise' && formData.value.scoreChange <= 0) {
+    formData.value.scoreChange = 1
+  } else if (newValue === 'criticism' && formData.value.scoreChange >= 0) {
+    formData.value.scoreChange = -1
+  }
+})
+
 // 提交表单
 const handleSubmit = async () => {
   if (!isFormValid.value) return
@@ -216,10 +251,10 @@ const handleSubmit = async () => {
     // 构建符合后端要求的数据格式
     const submitData = {
       class: parseInt(formData.value.class),
-      isadd: formData.value.scoreChange > 0,
+      isadd: formData.value.reportNature === 'praise', // 使用通报性质而不是分数判断
       changescore: Math.abs(formData.value.scoreChange),
-      note: `${formData.value.reportType} - ${formData.value.remark}`, // 将类型和备注合并
-      submitter: userInfo.name // 从用户信息中获取
+      note: `${formData.value.reportType} - ${formData.value.remark}`,
+      submitter: userInfo.name
     }
     
     console.log('提交通报数据:', submitData)
@@ -275,6 +310,7 @@ const resetForm = () => {
   formData.value = {
     class: '',
     reportType: '',
+    reportNature: '', // 重置通报性质
     scoreChange: 0,
     remark: ''
   }
