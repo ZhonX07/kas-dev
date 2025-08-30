@@ -1,3 +1,4 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
 const path = require('path')
@@ -21,10 +22,10 @@ let dbContext = {
 async function initPostgres() {
   console.log('尝试连接PostgreSQL数据库...')
   const pool = new Pool({
-    user: process.env.PGUSER || 'postgres',
-    host: process.env.PGHOST || 'localhost',
+    user: process.env.PGUSER || 'kas_user',
+    host: process.env.PGHOST || '117.72.79.92',
     database: process.env.PGDATABASE || 'kas_db',
-    password: process.env.PGPASSWORD || 'postgres',
+    password: process.env.PGPASSWORD || 'Xdcy1/2anddied',
     port: process.env.PGPORT || 5432,
     // 设置较短的连接超时，以便快速失败
     connectionTimeoutMillis: 5000
@@ -33,7 +34,7 @@ async function initPostgres() {
   try {
     // 测试连接
     const client = await pool.connect()
-    console.log('成功连接到PostgreSQL数据库')
+    console.log('成功连接到远程PostgreSQL数据库')
     client.release()
     return pool
   } catch (err) {
