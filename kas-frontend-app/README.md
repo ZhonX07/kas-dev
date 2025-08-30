@@ -13,3 +13,25 @@
 cnpm i
 ```
 以下载必要依赖。
+
+## 开发与启动
+
+### 开发模式
+
+启动Vue和Electron:
+```
+npm run electron:dev
+```
+
+### 生产模式构建
+
+构建应用程序:
+```
+npm run electron:build
+```
+
+### 仅启动Electron
+
+```
+npm start
+```

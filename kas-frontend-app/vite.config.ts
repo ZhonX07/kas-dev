@@ -1,36 +1,40 @@
 import { fileURLToPath, URL } from 'node:url'
-
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
+import path from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
     vue(),
   ],
+  base: './', // 确保打包后资源路径正确
   resolve: {
     alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url))
+      '@': path.resolve(__dirname, 'src'),
     },
   },
   server: {
-    port: 5173,
-    host: true
+    host: '0.0.0.0', // 允许从任何IP访问
+    port: 5173,      // 指定端口，与Electron配置保持一致
+    proxy: {
+      // 开发环境下代理API请求
+      '/api': {
+        target: 'http://117.72.79.92:8080',
+        changeOrigin: true,
+        secure: false
+      }
+    }
   },
   build: {
-    outDir: 'dist',
+    outDir: 'dist',  // 构建输出目录
+    emptyOutDir: true,
     assetsDir: 'assets',
     rollupOptions: {
       output: {
-        assetFileNames: (assetInfo) => {
-          if (!assetInfo.name) return 'assets/[name]-[hash][extname]'
-          
-          const info = assetInfo.name.split('.')
-          const extType = info[info.length - 1]
-          if (/\.(woff|woff2|eot|ttf|otf)$/.test(assetInfo.name)) {
-            return `fonts/[name]-[hash][extname]`
-          }
-          return `assets/[name]-[hash][extname]`
+        manualChunks: {
+          vue: ['vue', 'vue-router'],
+          vendor: ['@vueuse/core']
         }
       }
     }

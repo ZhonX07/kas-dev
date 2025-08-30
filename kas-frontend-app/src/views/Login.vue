@@ -44,6 +44,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { LOGIN_API } from '@/config/api'
 
 const router = useRouter()
 
@@ -67,7 +68,7 @@ const handleLogin = async () => {
   errorMessage.value = ''
 
   try {
-    const response = await fetch('http://localhost:8080/api/login', {
+    const response = await fetch(LOGIN_API, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
