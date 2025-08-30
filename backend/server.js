@@ -23,7 +23,7 @@ async function initPostgres() {
   console.log('尝试连接PostgreSQL数据库...')
   const pool = new Pool({
     user: process.env.PGUSER || 'kas_user',
-    host: process.env.PGHOST || '117.72.79.92',
+    host: process.env.PGHOST || 'localhost',
     database: process.env.PGDATABASE || 'kas_db',
     password: process.env.PGPASSWORD || 'Xdcy1/2anddied',
     port: process.env.PGPORT || 5432,
