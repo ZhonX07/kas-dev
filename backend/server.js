@@ -144,8 +144,8 @@ app.use((err, req, res, next) => {
   })
 })
 
-// 404处理
-app.use((req, res) => {
+// 404处理 - 使用正则表达式替代通配符
+app.use(/(.*)?/, (req, res) => {
   res.status(404).json({
     success: false,
     message: '接口不存在'
