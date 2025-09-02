@@ -3,13 +3,11 @@
  * 用于集中管理后端API接口地址
  */
 
-// 开发环境使用本地地址，生产环境使用远程地址
+// 开发环境和生产环境都使用远程地址
 const isDev = import.meta.env.DEV
 
 // API基础URL
-export const API_BASE_URL = isDev 
-  ? 'http://localhost:8080/api' 
-  : 'http://117.72.79.92:8080/api'
+export const API_BASE_URL = 'http://117.72.79.92:8080/api'
 
 // 登录接口
 export const LOGIN_API = `${API_BASE_URL}/login`

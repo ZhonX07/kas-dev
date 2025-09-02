@@ -158,9 +158,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { getUserInfo } from '@/utils/auth' // 假设有这个函数来获取用户信息
-
-// API 基础 URL
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+import { SUBMIT_REPORT_API, API_CONFIG } from '@/config/api'
 
 // 表单数据
 const formData = ref({
@@ -260,10 +258,10 @@ const handleSubmit = async () => {
     console.log('提交通报数据:', submitData)
     
     // 使用配置的 API URL
-    const response = await fetch(`${API_BASE_URL}/inputdata`, {
+    const response = await fetch(SUBMIT_REPORT_API, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        ...API_CONFIG.headers,
         'Authorization': `Bearer ${localStorage.getItem('token')}` // 添加认证 token
       },
       body: JSON.stringify(submitData),
